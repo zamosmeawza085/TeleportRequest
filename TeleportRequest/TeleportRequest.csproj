@@ -92,7 +92,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio>
-      <UserProperties BuildVersion_IncrementBeforeBuild="False" BuildVersion_ReplaceNonNumerics="False" BuildVersion_BuildVersioningStyle="None.None.None.None" BuildVersion_UpdateFileVersion="False" BuildVersion_UpdateAssemblyVersion="False" BuildVersion_StartDate="1/1/1" />
+      <UserProperties BuildVersion_IncrementBeforeBuild="False" BuildVersion_ReplaceNonNumerics="False" BuildVersion_BuildVersioningStyle="None.None.None.MonthAndDayStamp" BuildVersion_UpdateFileVersion="True" BuildVersion_UpdateAssemblyVersion="True" BuildVersion_StartDate="1415/1/1" />
     </VisualStudio>
   </ProjectExtensions>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

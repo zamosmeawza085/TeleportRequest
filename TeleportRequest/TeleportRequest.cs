@@ -269,68 +269,87 @@ namespace TeleportRequest
                 return;
             }
 
-            string PlayerName = String.Join(" ", e.Parameters.ToArray());
-            List<TSPlayer> Players = TShock.Utils.FindPlayer(PlayerName);
-            if (Players.Count == 0)
-                e.Player.SendErrorMessage("Invalid Player!");
-            else if (Players.Count > 1)
-                e.Player.SendErrorMessage("More than one player matched!");
+            if (e.Parameters[0] == "all" || e.Parameters[0] == "*")
+            {
+                if (e.Player.Group.HasPermission(Permissions.tpsuper))
+                {
+                    for (int i = 0; i < Main.maxPlayers; i++)
+                    {
+                        if (Main.player[i].active && (Main.player[i] != e.TPlayer))
+                        {
+                            TShock.Players[i].Teleport(e.Player.TileX * 16, e.Player.TileY * 16);
+                            TShock.Players[i].SendInfoMessage(string.Format("You were teleported to {0}.", e.Player.Name) + ".");
+                        }
+                    }
+                }
+                else
+                    e.Player.SendErrorMessage("You are not allowed to teleport everybody here.");
+            }
             else
             {
-                var PlyIndex = Players[0].Index;
-                if (e.Player.Index == PlyIndex)
+                string PlayerName = String.Join(" ", e.Parameters.ToArray());
+                List<TSPlayer> Players = TShock.Utils.FindPlayer(PlayerName);
+                if (Players.Count == 0)
+                    e.Player.SendErrorMessage("Invalid Player!");
+                else if (Players.Count > 1)
+                    e.Player.SendErrorMessage("More than one player matched!");
+                else
                 {
-                    e.Player.SendErrorMessage("You cannot teleport yourself here. You're already here.");
-                    Timer.Start();
-                    return;
-                }
-                if (!e.Player.Group.HasPermission(Permissions.tpsuper))
-                {
-                    if (Players[0].Group.HasPermission(Permissions.tpcon))
+                    var PlyIndex = Players[0].Index;
+                    if (e.Player.Index == PlyIndex)
                     {
-                        if (Player[PlyIndex].TPHereType == 0)
+                        e.Player.SendErrorMessage("You cannot teleport yourself here. You're already here.");
+                        Timer.Start();
+                        return;
+                    }
+                    if (!e.Player.Group.HasPermission(Permissions.tpsuper))
+                    {
+                        if (Players[0].Group.HasPermission(Permissions.tpcon))
                         {
-                            e.Player.SendErrorMessage("{0} has prevented your teleport request.", Players[0].Name);
-                            Players[0].SendInfoMessage("{0} attempted to teleport you.", e.Player.Name);
-                        }
-                        else if (Player[PlyIndex].TPHereType == 1)
-                        {
-                            for (int i = 0; i < Request.Length; i++)
+                            if (Player[PlyIndex].TPHereType == 0)
                             {
-                                Request tpr = Request[i];
-                                if (tpr != null)
+                                e.Player.SendErrorMessage("{0} has prevented your teleport request.", Players[0].Name);
+                                Players[0].SendInfoMessage("{0} attempted to teleport you.", e.Player.Name);
+                            }
+                            else if (Player[PlyIndex].TPHereType == 1)
+                            {
+                                for (int i = 0; i < Request.Length; i++)
                                 {
-                                    if (tpr.Timeout > 0 && tpr.ReceiverID == PlyIndex)
+                                    Request tpr = Request[i];
+                                    if (tpr != null)
                                     {
-                                        e.Player.SendErrorMessage("{0} already has a teleport request. Try again later.", Players[0].Name);
-                                        Players[0].SendInfoMessage("{0} attempted to teleport you.", e.Player.Name);
-                                        return;
+                                        if (tpr.Timeout > 0 && tpr.ReceiverID == PlyIndex)
+                                        {
+                                            e.Player.SendErrorMessage("{0} already has a teleport request. Try again later.", Players[0].Name);
+                                            Players[0].SendInfoMessage("{0} attempted to teleport you.", e.Player.Name);
+                                            return;
+                                        }
                                     }
                                 }
+                                Request[e.Player.Index].Direction = true;
+                                Request[e.Player.Index].ReceiverID = (byte)PlyIndex;
+                                Request[e.Player.Index].Timeout = 15;
+                                Timer.Start();
+                                e.Player.SendSuccessMessage("Sent a teleport here request to {0}.", Players[0].Name);
                             }
-                            Request[e.Player.Index].Direction = true;
-                            Request[e.Player.Index].ReceiverID = (byte)PlyIndex;
-                            Request[e.Player.Index].Timeout = 15;
-                            Timer.Start();
-                            e.Player.SendSuccessMessage("Sent a teleport here request to {0}.", Players[0].Name);
+                            else
+                            {
+                                Players[0].SendInfoMessage("You were teleported to {0}.", e.Player.Name);
+                                e.Player.SendSuccessMessage("You teleported {0} here.", Players[0].Name);
+                                Teleport(Players[0], e.Player);
+                            }
                         }
                         else
                         {
-                            Players[0].SendInfoMessage("You were teleported to {0}.", e.Player.Name);
-                            e.Player.SendSuccessMessage("You teleported {0} here.", Players[0].Name);
-                            Teleport(Players[0], e.Player);
+                            e.Player.SendErrorMessage("You cannot teleported {0} here.", Players[0].Name);
                         }
                     }
                     else
                     {
-                        e.Player.SendErrorMessage("You cannot teleported {0} here.", Players[0].Name);
+                        Players[0].SendInfoMessage("You were teleported to {0}.", e.Player.Name);
+                        e.Player.SendSuccessMessage("You teleported {0} here.", Players[0].Name);
+                        Teleport(Players[0], e.Player);
                     }
-                }
-                else
-                {
-                    Players[0].SendInfoMessage("You were teleported to {0}.", e.Player.Name);
-                    e.Player.SendSuccessMessage("You teleported {0} here.", Players[0].Name);
-                    Teleport(Players[0], e.Player);
                 }
             }
         }
